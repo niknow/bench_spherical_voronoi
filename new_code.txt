@@ -1,0 +1,49 @@
+
+
+Timer unit: 2.99601e-07 s
+
+Total time: 23.2093 s
+File: spherical_voronoi.py
+Function: _calc_vertices_regions at line 266
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   266                                               def _calc_vertices_regions(self):
+   267                                                   """
+   268                                                   Calculates the Voronoi vertices and regions of the generators stored
+   269                                                   in self.points. The vertices will be stored in self.vertices and the
+   270                                                   regions in self.regions.
+   271                                           
+   272                                                   This algorithm was discussed at PyData London 2015 by
+   273                                                   Tyler Reddy, Ross Hemsley and Nikolai Nowaczyk
+   274                                                   """
+   275                                           
+   276                                                   # perform 3D Delaunay triangulation on data set
+   277                                                   # (here ConvexHull can also be used, and is faster)
+   278         1        21679  21679.0      0.0          self._tri = scipy.spatial.ConvexHull(self.points)
+   279                                           
+   280                                                   # add the center to each of the simplices in tri to get the same
+   281                                                   # tetrahedrons we'd have gotten from Delaunay tetrahedralization
+   282         1          631    631.0      0.0          tetrahedrons = self._tri.points[self._tri.simplices]
+   283         1            4      4.0      0.0          tetrahedrons = np.insert(
+   284         1            2      2.0      0.0              tetrahedrons,
+   285         1            2      2.0      0.0              3,
+   286         1           27     27.0      0.0              np.array([self.center]),
+   287         1          525    525.0      0.0              axis=1
+   288                                                   )
+   289                                           
+   290                                                   # produce circumcenters of tetrahedrons from 3D Delaunay
+   291         1        38743  38743.0      0.1          circumcenters = calc_circumcenters(tetrahedrons)
+   292                                           
+   293                                                   # project tetrahedron circumcenters to the surface of the sphere
+   294         1            7      7.0      0.0          self.vertices = project_to_sphere(
+   295         1            2      2.0      0.0              circumcenters,
+   296         1            4      4.0      0.0              self.center,
+   297         1          770    770.0      0.0              self.radius
+   298                                                   )
+   299                                           
+   300                                                   # calculate regions from triangulation
+   301         1            4      4.0      0.0          self.regions = [[k for k in range(0, len(self._tri.simplices))
+   302                                                                    if n in self._tri.simplices[k]]
+   303   7994001     77405061      9.7     99.9                          for n in range(0, len(self.points))]
+
